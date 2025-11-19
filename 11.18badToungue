@@ -1,0 +1,301 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*    Module:       main.cpp                                                  */
+/*    Author:       lapto                                                     */
+/*    Created:      5/9/2024, 6:22:49 PM                                      */
+/*    Description:  V5 project                                                */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+#include "vex.h";
+
+using namespace vex;
+
+// A global instance of vex::brain used for printing to the V5 brain screen
+vex::brain       Brain;
+
+motor leftfrontmotor = motor(PORT4, ratio18_1, true);
+motor leftbackmotor = motor(PORT11, ratio18_1, true);
+motor leftmidmotor = motor(PORT3, ratio18_1, true);
+motor rightfrontmotor = motor(PORT8, ratio18_1, false);
+motor rightbackmotor = motor(PORT20, ratio18_1, false);
+motor rightmidmotor = motor(PORT6, ratio18_1, false);
+motor frontrollers = motor(PORT21, ratio18_1, false);
+motor backrollers = motor(PORT19, ratio18_1, false);
+digital_out pneum = digital_out(Brain.ThreeWirePort.A);
+digital_out toungue = digital_out(Brain.ThreeWirePort.B);
+inertial inert = inertial(PORT15);
+
+
+
+controller control = controller();
+// define your global instances of motors and other devices here
+
+void turnRight(int units){
+    inert.resetRotation();
+    float lasterror = -units;
+    float placeholder = 0;
+    while(true){
+        float error = -units + inert.rotation(degrees);
+        float derivative = error - lasterror;
+        float power = error*0.3 + derivative*0.3;
+        if(error < 0){
+            placeholder = error*-1;
+        }
+        else{
+            placeholder = error;
+        }
+        if (placeholder < 3){
+            break;
+        }
+        leftfrontmotor.spin(reverse, power, pct);
+        leftmidmotor.spin(reverse,power,pct);
+        leftbackmotor.spin(reverse, power, pct);
+        rightfrontmotor.spin(forward, power, pct);
+        rightmidmotor.spin(forward,power,pct);
+        rightbackmotor.spin(forward, power, pct);
+        lasterror = error;
+        wait(10, msec);
+    }
+    leftfrontmotor.stop();
+    leftmidmotor.stop();
+    leftbackmotor.stop();
+    rightfrontmotor.stop();
+    rightmidmotor.stop();
+    rightbackmotor.stop();
+}
+
+void turnLeft(int units){
+    inert.resetRotation();
+    units+=4;
+    float lasterror = -units;
+    float var = 0;
+    while(true){
+        float error = -units - inert.rotation(degrees);
+        float derivative = error - lasterror;
+        float power = error*0.3 + derivative*0.5;
+        if(error < 0){
+            var = error*-1;
+        }
+        else{
+            var = error;
+        }
+        if (var < 4){
+            break;
+        }
+        leftfrontmotor.spin(forward, power, pct);
+        leftmidmotor.spin(forward, power, pct);
+        leftbackmotor.spin(forward, power, pct);
+        rightfrontmotor.spin(reverse, power, pct);
+        rightmidmotor.spin(reverse, power, pct);
+        rightbackmotor.spin(reverse, power, pct);
+        lasterror = error;
+        wait(10, msec);
+    }
+    leftfrontmotor.stop();
+    leftmidmotor.stop();
+    leftbackmotor.stop();
+    rightfrontmotor.stop();
+    rightmidmotor.stop();
+    rightbackmotor.stop();
+}
+
+
+int driveForward(int units){
+    Brain.Screen.setCursor(1,1);
+    Brain.Screen.clearScreen();
+    float lasterror = units;
+    float var = 0;
+    while(true){
+        float error = units - leftfrontmotor.position(degrees);
+        float derivative = error - lasterror;
+        float power = error*0.16 + derivative*0.13;
+        if(error < 0){
+            var = error*-1;
+        }
+        else{
+            var = error;
+        }
+        if (var < 10){
+            break;
+        }
+        leftfrontmotor.spin(forward, power, pct);
+        leftmidmotor.spin(forward, power, pct);
+        leftbackmotor.spin(forward, power, pct);
+        rightfrontmotor.spin(forward, power, pct);
+        rightmidmotor.spin(forward, power, pct);
+        rightbackmotor.spin(forward, power, pct);
+        lasterror = error;
+        wait(10, msec);
+    }
+    leftbackmotor.stop();
+    leftfrontmotor.stop();
+    leftmidmotor.stop();
+    rightfrontmotor.stop();
+    rightfrontmotor.stop();
+    rightmidmotor.stop();
+    return  0;
+}
+
+
+void stopAll(){
+    leftbackmotor.stop();
+    leftfrontmotor.stop();
+    leftmidmotor.stop();
+    rightfrontmotor.stop();
+    rightfrontmotor.stop();
+    rightmidmotor.stop();
+
+    leftbackmotor.resetPosition();
+    leftfrontmotor.resetPosition();
+    leftmidmotor.resetPosition();
+    rightbackmotor.resetPosition();
+    rightfrontmotor.resetPosition();
+    rightmidmotor.resetPosition();
+
+        
+}
+
+void badforward(int units){
+    leftfrontmotor.spin(forward,100,percent);
+        leftbackmotor.spin(forward,100,percent);
+
+            leftmidmotor.spin(forward,100,percent);
+
+    rightfrontmotor.spin(forward,100,percent);
+       rightbackmotor.spin(forward,100,percent);
+
+           rightmidmotor.spin(forward,100,percent);
+    wait(units, seconds);
+    stopAll();
+}
+
+
+void driveReverse(int units){
+    leftfrontmotor.resetPosition();
+    float lasterror = units;
+    float var = 0;
+    while(true){
+        float error = units + leftfrontmotor.position(degrees);
+        float derivative = error - lasterror;
+        float power = error*0.1 + derivative*0.9;
+        if(error < 0){
+            var = error*-1;
+        }
+        else{
+            var = error;
+        }
+        if (var < 10){
+            break;
+        }
+        leftfrontmotor.spin(reverse, power, pct);
+        leftmidmotor.spin(reverse, power, pct);
+        leftbackmotor.spin(reverse, power, pct);
+        rightfrontmotor.spin(reverse, power, pct);
+        rightmidmotor.spin(reverse, power, pct);
+        rightbackmotor.spin(reverse, power, pct);
+        lasterror = error;
+        wait(10, msec);
+    }
+    leftbackmotor.stop();
+    leftfrontmotor.stop();
+    leftmidmotor.stop();
+    rightfrontmotor.stop();
+    rightfrontmotor.stop();
+    rightmidmotor.stop();
+    // turnLeft(1);
+}
+
+void badturnLeft(int units){
+    leftmidmotor.spin(reverse, 100, percent);
+    leftmidmotor.spin(reverse, 100, percent);
+    leftmidmotor.spin(reverse, 100, percent);
+    wait(units, seconds);
+}
+
+int brainDisplay(void){
+    while(true){
+        Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1,1); //row-column yx
+        Brain.Screen.print("Inertial Reading: %f", inert.rotation(degrees));
+        wait(10,msec);
+    }
+    return(0);
+}
+
+int frontStop() {
+    wait(1, seconds);
+    frontrollers.stop();
+    return 0;
+}
+
+int backStop() {
+    wait(1, seconds);
+    backrollers.stop();
+    return 0;
+}
+
+void calibrate(){
+    inert.calibrate();
+    wait(3, seconds);
+}
+
+
+int main() {
+    thread thrd(brainDisplay);
+    calibrate();
+    //auton.take.1
+    // toungue.set(true);
+    // driveReverse(510);
+    // turnRight(93);
+    // stopAll();
+    // wait(0.5,seconds);
+    // driveReverse(430);
+    // frontrollers.spin(forward,100,percent);
+    // backrollers.spin(reverse,100,percent);
+
+    //auton.left.AWP.code
+    toungue.set(false);
+    frontrollers.spin(forward, 100, pct);
+    driveReverse(410);
+    turnRight(93);
+    stopAll();
+    driveReverse(10);
+    stopAll();
+    //verything above here works
+    toungue.set(false);
+    frontrollers.spin(forward,100,percent);
+        wait(1,seconds);
+    
+     //ram into things a lot
+    driveForward(75);
+    badforward(1);
+
+    wait(0.5,seconds);
+    driveReverse(100);
+    wait(0.2,seconds);
+    badforward(1);
+    wait(0.5,seconds);
+    driveReverse(100);
+    wait(0.2,seconds);
+    badforward(1);
+    wait(0.5,seconds);
+    driveReverse(100);
+    wait(0.2,seconds);
+    
+    //align with goal
+    driveReverse(200);
+    turnLeft(25);
+    driveReverse(150);
+    turnRight(35);
+    driveReverse(80);
+    frontrollers.spin(forward,100,percent);
+    backrollers.spin(reverse,100,percent);
+
+    //come back to loader
+    driveForward(80);
+    turnLeft(35);
+    driveForward(150);
+    turnRight(25);
+    driveForward(200);
+    
+}
